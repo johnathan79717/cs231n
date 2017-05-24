@@ -76,7 +76,8 @@ class TwoLayerNet(object):
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    pass
+    activation = np.maximum(0, X.dot(W1) + b1)
+    scores = activation.dot(W2) + b2
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -93,7 +94,13 @@ class TwoLayerNet(object):
     # in the variable loss, which should be a scalar. Use the Softmax           #
     # classifier loss.                                                          #
     #############################################################################
-    pass
+    scores2 = scores - scores.max(axis=1, keepdims=True)
+    exp_scores = np.exp(scores2)
+    s = exp_scores.sum(axis=1, keepdims=True)
+    exp_scores /= s
+    correct_class_score = exp_scores[np.arange(N), y]
+    loss = -np.log(correct_class_score).sum() / N +\
+           reg * ((W1*W1).sum() + (W2*W2).sum() + (b1*b1).sum() + (b2*b2).sum())
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -105,7 +112,17 @@ class TwoLayerNet(object):
     # and biases. Store the results in the grads dictionary. For example,       #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
-    pass
+    mask = np.zeros((N, b2.shape[0]))
+    mask[np.arange(N), y] = 1
+    dscores = (exp_scores - mask) / N
+    # scores = activation * W2 + b
+    grads['b2'] = dscores.sum(axis=0) + 2 * reg * b2
+    grads['W2'] = activation.T.dot(dscores) + 2 * reg * W2
+
+    dactivation = dscores.dot(W2.T)
+    dactivation[activation == 0] = 0
+    grads['b1'] = dactivation.sum(axis=0) + 2 * reg * b1
+    grads['W1'] = X.T.dot(dactivation) + 2 * reg * W1
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
