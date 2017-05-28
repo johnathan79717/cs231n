@@ -1,3 +1,4 @@
 *.swp
 *.pyc
 .env/*
+im2col_cython.cpython-36m-darwin.so
